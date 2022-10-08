@@ -5,6 +5,34 @@ import re
 import pandas as pd
 
 app = Flask(__name__)
+app.json_encoder = LazyJSONEncoder
+
+swagger_template = dict(
+info = {
+    'title': LazyString(lambda: 'Gold Challenge Data Science Binar Academy'),
+    'version': LazyString(lambda: '1'),
+    'description': LazyString(lambda: 'Dokumentasi API untuk Data Processing dan Modeling'),
+    },
+    host = LazyString(lambda: request.host)
+)
+
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'docs',
+            "route": '/docs.json',
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/docs/"
+}
+
+swagger = Swagger(app, template=swagger_template,             
+                  config=swagger_config)
 
 def replace_ascii(s):
     return unidecode(s)
@@ -28,6 +56,7 @@ def cleansing(s):
     s = remove_whitespace(s)
     return s
 
+@swag_from("text_input.yml", methods=['POST'])
 @app.route("/text_input", methods=['POST'])
 def get_text():
     input_text = str(request.form["text"])
@@ -41,6 +70,7 @@ def get_text():
     
     return jsonify(return_text)
 
+@swag_from("upload_file.yml", methods=['POST'])
 @app.route("/upload_file", methods=['POST'])
 def upload_file():
     file = request.files["file"]
