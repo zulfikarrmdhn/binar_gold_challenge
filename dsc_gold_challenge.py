@@ -3,6 +3,9 @@ from flasgger import Swagger, LazyString, LazyJSONEncoder, swag_from
 from unidecode import unidecode
 import re
 import pandas as pd
+import sqlite3
+
+conn =  sqlite3.connect('gold_challenge.db', check_same_thread=False)
 
 app = Flask(__name__)
 app.json_encoder = LazyJSONEncoder
@@ -62,6 +65,12 @@ def get_text():
     input_text = str(request.form["text"])
     output_text = cleansing(input_text)
 
+    conn.execute("CREATE TABLE IF NOT EXISTS clean_text (input_text VARCHAR(255), output_text VARCHAR(255))")
+    query_text = "INSERT INTO clean_text (input_text, output_text) values(?, ?)"
+    val = (input_text, output_text)
+    conn.execute(query_text, val)
+    conn.commit()
+
     return_text = {
         "result":"Selamat, text anda sudah dibersihkan.",
         "input": input_text,
@@ -79,6 +88,9 @@ def upload_file():
 
     Tweet = df_csv.Tweet.to_list()
     new_tweet = df_csv.new_tweet.to_list()
+
+    df_csv.to_sql("tweet_abusive", con=conn, index=False, if_exists='append')
+    conn.close()
 
     return_file = {
         "result":"selamat, data anda berhasil diupload ke database.",
