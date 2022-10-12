@@ -83,14 +83,18 @@ def get_text():
 @app.route("/upload_file", methods=['POST'])
 def upload_file():
     file = request.files["file"]
-    df_csv = (pd.read_csv(file, encoding="latin-1"))
-    df_csv['new_tweet'] = df_csv['Tweet'].apply(cleansing)
+    df_dirty = (pd.read_csv(file, encoding="latin-1"))
 
-    Tweet = df_csv.Tweet.to_list()
-    new_tweet = df_csv.new_tweet.to_list()
+    df_dirty.to_sql("dirty_tweet", con=conn, index=False, if_exists='append')
 
-    df_csv.to_sql("tweet_abusive", con=conn, index=False, if_exists='append')
+    df_clean = df_dirty.copy()
+    df_clean['new_tweet'] = df_clean['Tweet'].apply(cleansing)
+
+    df_clean.to_sql("clean_tweet", con=conn, index=False, if_exists='append')
     conn.close()
+
+    Tweet = df_clean.Tweet.to_list()
+    new_tweet = df_clean.new_tweet.to_list()
 
     return_file = {
         "result":"selamat, data anda berhasil diupload ke database.",
