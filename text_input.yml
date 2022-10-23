@@ -11,7 +11,13 @@ responses:
     '500':
       description: Internal Server Error
 parameters:
-  - name: text
-    in: formData
-    required: true
-    type: string
+  - name: body
+    in: body
+    schema:
+      id : text_remove
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: input your text
