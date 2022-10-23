@@ -43,7 +43,7 @@ conn.close()
 
 #Save New DataFrame to Directory
 conn = sqlite3.connect('gold_challenge_upload_file.db', check_same_thread=False)
-new_df = pd.read_sql_query("SELECT new_tweet, HSvsAbusive, HS_Target, HS_Category, HS_Level FROM clean_tweet", conn)
+new_df = pd.read_sql_query("SELECT new_tweet, HS, Abusive, HSvsAbusive, HS_Target, HS_Category, HS_Level FROM clean_tweet", conn)
 new_df.to_csv("Data_Visualize.csv")
 conn.close()
 
@@ -52,6 +52,18 @@ conn = sqlite3.connect('gold_challenge_upload_file.db', check_same_thread=False)
 Data_Visualize = pd.read_csv("Data_Visualize.csv", encoding="latin-1")
 Data_Visualize.to_sql("Data_Visualize", con=conn, index=False, if_exists='append')
 conn.close()
+
+#Count HateSpeech Tweet
+HS_Count = Data_Visualize["HS"].value_counts()
+df = {"Title":["NonHS","HS"],"Total":HS_Count.values}
+HS_Count = pd.DataFrame(df).set_index("Title")
+print(HS_Count)
+
+#Count Abusive Tweet
+Abusive_Count = Data_Visualize["Abusive"].value_counts()
+df = {"Title":["NonAbusive","Abusive"],"Total":Abusive_Count.values}
+Abusive_Count = pd.DataFrame(df).set_index("Title")
+print(Abusive_Count)
 
 #Hate Speech vs Abusive Visualize
 HSvsAbusive_count = Data_Visualize["HSvsAbusive"].value_counts()
