@@ -1,4 +1,4 @@
-# Binar Academy - Data Science Wave 2 - Gold Challenge - Dokumentasi API untuk Data Processing dan Modeling
+# Binar Academy - Data Science Wave 2 - Gold Challenge - API Documentation for Data Processing and Modeling
 by Zulfikar Ramadhan
 
 Donwload all file:
