@@ -13,5 +13,5 @@ responses:
 parameters:
   - name: file
     in: formData
-    required: required
     type: file
+    required: false

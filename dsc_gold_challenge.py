@@ -5,8 +5,6 @@ import re
 import pandas as pd
 import sqlite3
 
-conn =  sqlite3.connect('gold_challenge.db', check_same_thread=False)
-
 app = Flask(__name__)
 app.json_encoder = LazyJSONEncoder
 
@@ -62,14 +60,18 @@ def cleansing(s):
 @swag_from("text_input.yml", methods=['POST'])
 @app.route("/text_input", methods=['POST'])
 def get_text():
-    input_text = str(request.form["text"])
-    output_text = cleansing(input_text)
-
-    conn.execute("CREATE TABLE IF NOT EXISTS clean_text (input_text VARCHAR(255), output_text VARCHAR(255))")
-    query_text = "INSERT INTO clean_text (input_text, output_text) values(?, ?)"
-    val = (input_text, output_text)
-    conn.execute(query_text, val)
-    conn.commit()
+    input_text = request.get_json()
+    output_text = cleansing(input_text['text'])
+    
+    db1 =  sqlite3.connect('gold_challenge_text_input.db', check_same_thread=False)
+    db1.execute("CREATE TABLE IF NOT EXISTS clean_text (input_text, output_text)")
+    query_text = "INSERT INTO clean_text (input_text, output_text) values(?, ? )"
+    val = (input_text['text'], output_text)
+    db1.execute(query_text, val)
+    clean_text_file = pd.read_sql_query("SELECT * FROM clean_text", db1)
+    clean_text_file.to_csv("Clean_Text_Input.csv")
+    db1.commit()
+    db1.close()
 
     return_text = {
         "result":"Selamat, text anda sudah dibersihkan.",
@@ -85,19 +87,29 @@ def upload_file():
     file = request.files["file"]
     df_dirty = (pd.read_csv(file, encoding="latin-1"))
 
-    df_dirty.to_sql("dirty_tweet", con=conn, index=False, if_exists='append')
+    db2 =  sqlite3.connect('gold_challenge_upload_file.db', check_same_thread=False)
+
+    df_dirty.to_sql("dirty_tweet", con=db2, index=False, if_exists='append')
+
+    dirty_tweet_file = pd.read_sql_query("SELECT * FROM dirty_tweet", db2)
+    dirty_tweet_file.to_csv("Dirty_Tweet.csv")
 
     df_clean = df_dirty.copy()
     df_clean['new_tweet'] = df_clean['Tweet'].apply(cleansing)
 
-    df_clean.to_sql("clean_tweet", con=conn, index=False, if_exists='append')
-    conn.close()
+    db2 =  sqlite3.connect('gold_challenge_upload_file.db', check_same_thread=False)
+    df_clean.to_sql("clean_tweet", con=db2, index=False, if_exists='append')
+
+    clean_tweet_file = pd.read_sql_query("SELECT * FROM clean_tweet", db2)
+    clean_tweet_file.to_csv("Clean_Tweet.csv")
+
+    db2.close()
 
     Tweet = df_clean.Tweet.to_list()
     new_tweet = df_clean.new_tweet.to_list()
 
     return_file = {
-        "result":"selamat, data anda berhasil diupload ke database.",
+        "result":"Selamat, data bersih anda berhasil diupload ke database.",
         "tweet": Tweet,
         "new_tweet": new_tweet
     }
